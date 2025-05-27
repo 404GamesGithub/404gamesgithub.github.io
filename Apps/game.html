@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#222831">
+    <meta name="googlebot" content="index, follow, snippet">
+    <meta name="robots" content="index, follow">
+    <title id="pageTitle">InputDelay</title> <!-- Give title an ID to update it -->
+
+    <!-- Favicons - assuming you want the same favicon as the games page -->
+    <link rel="icon" href="2cJw7a9.png" type="image/png">
+    <link rel="shortcut icon" href="2cJw7a9.png" type="image/png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Link the new dedicated CSS file -->
+    <link rel="stylesheet" href="css/game-style.css">
+
+    <!-- Particles.js (Keep CDN) -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Google Ads (Keep) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4207227785539100"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+
+    <!-- Back Button -->
+    <button id="backBtn" onclick="window.location.href='index.html';">
+        <i class="fa fa-chevron-left"></i>
+    </button>
+
+    <!-- Game Name Display -->
+    <div id="nameContainer">
+        <h3 id="gameNameDisplay"></h3>
+    </div>
+
+    <!-- Iframe Container and Iframe -->
+    <div class="game-frame-wrapper">
+        <iframe id="gameFrame" frameborder="0" marginheight="0" marginwidth="0"></iframe>
+    </div>
+
+    <!-- Button Container -->
+    <div id="buttonContainer">
+        <!-- Individual Buttons -->
+        <button id="viewBtn">
+            <i class="fa fa-eye"></i>
+            <span id="viewCount">0</span>
+        </button>
+
+        <button id="likeBtn" onclick="toggleLike()">
+            <i class="fa fa-thumbs-up"></i>
+            <span id="likeCount">0</span>
+        </button>
+
+        <button id="dislikeBtn" onclick="toggleDislike()">
+            <i class="fa fa-thumbs-down"></i>
+            <span id="dislikeCount">0</span>
+        </button>
+
+        <button id="heartBtn" onclick="toggleHeart()">
+            <i id="heartIcon" class="fa fa-heart heart"></i>
+        </button>
+
+        <button id="fullscreenBtn" onclick="toggleFullscreen()">
+            <i class="fas fa-expand"></i>
+        </button>
+    </div>
+
+    <!-- --- Scripts --- -->
+    <script>
+        // Ensure Particles.js initializes when the DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+             particlesJS("particles-js", {
+                "particles": {
+                  "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                  "color": { "value": "#4A90E2" }, // Particles color - pick one that fits theme
+                  "shape": { "type": "circle" },
+                  "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } },
+                  "size": { "value": 3, "random": true, "anim": { "enable": false } },
+                  "line_linked": { "enable": true, "distance": 150, "color": "#88B0D1", "opacity": 0.4, "width": 1 }, // Line color
+                  "move": { "enable": true, "speed": 3, "direction": "none", "random": true, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                  "detect_on": "canvas",
+                  "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": false }, "resize": true },
+                  "modes": { "repulse": { "distance": 100, "duration": 0.4 } }
+                },
+                "retina_detect": true
+              });
+
+            // This is the correct logic for game.html: Read from localStorage
+            const gameUrl = localStorage.getItem('lastClickedUrl');
+            const gameName = localStorage.getItem('lastClickedGame');
+            const gameFrameWrapper = document.querySelector('.game-frame-wrapper');
+            const gameFrame = document.getElementById("gameFrame");
+            const gameNameDisplay = document.getElementById('gameNameDisplay');
+            const pageTitle = document.getElementById('pageTitle');
+
+            if (gameUrl && gameFrame && gameNameDisplay && gameFrameWrapper) {
+                console.log(`Loading App: ${gameName} from ${gameUrl}`); // Added console log
+                // Display game name and update page title
+                gameNameDisplay.textContent = gameName;
+                pageTitle.textContent = gameName + " - InputDelay"; // Set page title
+
+                // Show the iframe wrapper and load the game
+                gameFrameWrapper.style.display = "block";
+                gameFrame.src = gameUrl; // Use savedUrl
+
+                // --- Load Initial States (Like, Dislike, Favorite, View Count) ---
+                const likeBtn = document.getElementById("likeBtn");
+                const dislikeBtn = document.getElementById("dislikeBtn");
+                const heartIcon = document.getElementById("heartIcon"); // Icon directly
+                const likeCountSpan = document.getElementById("likeCount"); // Span for count
+                const dislikeCountSpan = document.getElementById("dislikeCount"); // Span for count
+                const viewCountSpan = document.getElementById("viewCount"); // Span for count
+
+
+                // Likes/Dislikes
+                const likedGame = localStorage.getItem(gameUrl + '-liked') === 'true';
+                const dislikedGame = localStorage.getItem(gameUrl + '-disliked') === 'true';
+                let savedLikeCount = parseInt(localStorage.getItem(gameUrl + '-likeCount')) || 0;
+                let savedDislikeCount = parseInt(localStorage.getItem(gameUrl + '-dislikeCount')) || 0;
+
+                if (likeBtn) likeBtn.classList.toggle('liked', likedGame);
+                if (dislikeBtn) dislikeBtn.classList.toggle('disliked', dislikedGame);
+                if (likeCountSpan) likeCountSpan.innerText = savedLikeCount;
+                if (dislikeCountSpan) dislikeCountSpan.innerText = savedDislikeCount;
+
+                // Favorites (using a key derived from the URL for consistency)
+                // Ensure this key format matches the one used when saving favorites in index.html
+                // index.html uses `fav-${itemPath.replace(/[^a-zA-Z0-9]+/g, '-')}`
+                // game.html is using `gameUrl.replace(/[^a-zA-Z0-9]+/g, '-')`
+                // These should ideally match exactly based on how the *item* is identified.
+                // Using the data-game-id is the most robust way if available.
+                // Since data-game-id might not be passed directly, deriving from gameUrl (which is the data-path) is a reasonable approach if it's consistent.
+                 const itemIdFromUrl = gameUrl.replace(/[^a-zA-Z0-9]+/g, '-');
+                const isFavorited = localStorage.getItem(`heartState-fav-${itemIdFromUrl}`) === 'true'; // Adjusted key format to match index.html's `fav-` prefix
+                if (heartIcon) heartIcon.classList.toggle('favorited', isFavorited);
+
+
+                // View Count
+                let savedViewCount = parseInt(localStorage.getItem(gameUrl + '-viewCount')) || 0;
+                // Increment and save view count only on *initial* load of this URL within a session
+                const lastViewedUrl = sessionStorage.getItem('lastViewedGameUrl');
+                if (lastViewedUrl !== gameUrl) {
+                     savedViewCount++;
+                     localStorage.setItem(gameUrl + '-viewCount', savedViewCount);
+                     sessionStorage.setItem('lastViewedGameUrl', gameUrl); // Store the URL for this session
+                }
+
+                if (viewCountSpan) viewCountSpan.textContent = savedViewCount;
+
+
+            } else {
+                // Handle case where no game URL is found (e.g., accessed directly)
+                console.warn("No game URL found in localStorage. Displaying default message.");
+                gameNameDisplay.textContent = 'No app selected. Please select an app from the Apps page.'; // Changed message
+                 pageTitle.textContent = "No App - InputDelay"; // Changed title
+                 // Hide buttons if no game is loaded
+                 const buttonContainer = document.getElementById('buttonContainer');
+                 if(buttonContainer) buttonContainer.style.display = 'none';
+
+                 // Optionally hide the iframe wrapper too
+                 if(gameFrameWrapper) gameFrameWrapper.style.display = 'none';
+
+            }
+
+        });
+
+
+        // --- Button Click Handlers ---
+
+        function toggleFullscreen() {
+            const iframe = document.getElementById("gameFrame");
+            if (!iframe) return;
+
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.mozRequestFullScreen) { // Firefox
+                iframe.mozRequestFullScreen();
+            } else if (iframe.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) { // IE/Edge
+                iframe.msRequestFullscreen();
+            }
+        }
+
+        function toggleLike() {
+            const gameUrl = localStorage.getItem('lastClickedUrl');
+            if (!gameUrl) return;
+
+            const likeBtn = document.getElementById("likeBtn");
+            const dislikeBtn = document.getElementById("dislikeBtn");
+            const likeCountSpan = document.getElementById("likeCount");
+            const dislikeCountSpan = document.getElementById("dislikeCount");
+
+            const likedGame = localStorage.getItem(gameUrl + '-liked') === 'true';
+            const dislikedGame = localStorage.getItem(gameUrl + '-disliked') === 'true';
+
+            let currentLikeCount = parseInt(likeCountSpan.innerText) || 0;
+            let currentDislikeCount = parseInt(dislikeCountSpan.innerText) || 0;
+
+            if (likedGame) {
+                // Was liked, unliking
+                localStorage.setItem(gameUrl + '-liked', 'false');
+                if (likeBtn) likeBtn.classList.remove('liked');
+                currentLikeCount = Math.max(0, currentLikeCount - 1); // Decrement, ensure not negative
+            } else {
+                // Was not liked, liking
+                localStorage.setItem(gameUrl + '-liked', 'true');
+                 if (likeBtn) likeBtn.classList.add('liked');
+                currentLikeCount++; // Increment
+
+                // If was disliked, remove dislike
+                if (dislikedGame) {
+                    localStorage.setItem(gameUrl + '-disliked', 'false');
+                    if (dislikeBtn) dislikeBtn.classList.remove('disliked');
+                    currentDislikeCount = Math.max(0, currentDislikeCount - 1); // Decrement dislike
+                }
+            }
+
+            // Update counts in localStorage and on screen
+            localStorage.setItem(gameUrl + '-likeCount', currentLikeCount);
+            if (likeCountSpan) likeCountSpan.innerText = currentLikeCount;
+
+            localStorage.setItem(gameUrl + '-dislikeCount', currentDislikeCount);
+            if (dislikeCountSpan) dislikeCountSpan.innerText = currentDislikeCount;
+        }
+
+        function toggleDislike() {
+            const gameUrl = localStorage.getItem('lastClickedUrl');
+             if (!gameUrl) return;
+
+            const likeBtn = document.getElementById("likeBtn");
+            const dislikeBtn = document.getElementById("dislikeBtn");
+            const likeCountSpan = document.getElementById("likeCount");
+            const dislikeCountSpan = document.getElementById("dislikeCount");
+
+            const dislikedGame = localStorage.getItem(gameUrl + '-disliked') === 'true';
+            const likedGame = localStorage.getItem(gameUrl + '-liked') === 'true';
+
+
+            let currentDislikeCount = parseInt(dislikeCountSpan.innerText) || 0;
+            let currentLikeCount = parseInt(likeCountSpan.innerText) || 0;
+
+
+            if (dislikedGame) {
+                // Was disliked, undisliking
+                localStorage.setItem(gameUrl + '-disliked', 'false');
+                if (dislikeBtn) dislikeBtn.classList.remove('disliked');
+                currentDislikeCount = Math.max(0, currentDislikeCount - 1); // Decrement, ensure not negative
+            } else {
+                // Was not disliked, disliking
+                localStorage.setItem(gameUrl + '-disliked', 'true');
+                if (dislikeBtn) dislikeBtn.classList.add('disliked');
+                currentDislikeCount++; // Increment
+
+                // If was liked, remove like
+                if (likedGame) {
+                     localStorage.setItem(gameUrl + '-liked', 'false');
+                     if (likeBtn) likeBtn.classList.remove('liked');
+                     currentLikeCount = Math.max(0, currentLikeCount - 1); // Decrement like
+                }
+            }
+
+             // Update counts in localStorage and on screen
+            localStorage.setItem(gameUrl + '-dislikeCount', currentDislikeCount);
+            if (dislikeCountSpan) dislikeCountSpan.innerText = currentDislikeCount;
+
+            localStorage.setItem(gameUrl + '-likeCount', currentLikeCount);
+            if (likeCountSpan) likeCountSpan.innerText = currentLikeCount;
+        }
+
+         function toggleHeart() {
+            const gameUrl = localStorage.getItem('lastClickedUrl');
+            const gameName = localStorage.getItem('lastClickedGame'); // Keep gameName key for consistency with games.html fav logic
+            if (!gameUrl || !gameName) return;
+
+            const heartIcon = document.getElementById("heartIcon");
+
+            // Use a consistent ID format for localStorage, perhaps derived from the URL
+            // This must EXACTLY match how the key is saved in index.html's fav logic
+            const itemIdFromUrl = gameUrl.replace(/[^a-zA-Z0-9]+/g, '-');
+            // The key used in games.html favoriting is `heartState-${itemId}` where itemId is like `fav-Games-Apps-Simple-Calculator-html`
+            const localStorageKey = `heartState-fav-${itemIdFromUrl}`;
+
+
+            const isCurrentlyFavorited = localStorage.getItem(localStorageKey) === 'true';
+
+            if (isCurrentlyFavorited) {
+                // Was favorited, unfavoriting
+                localStorage.setItem(localStorageKey, 'false');
+                if (heartIcon) heartIcon.classList.remove('favorited');
+            } else {
+                // Was not favorited, favoriting
+                localStorage.setItem(localStorageKey, 'true');
+                 if (heartIcon) heartIcon.classList.add('favorited');
+            }
+             // Note: Favoriting state change needs to potentially update the main index page's view
+             // This typically requires refreshing or a more complex state management setup,
+             // which is beyond the scope of fixing the current error. localStorage update is sufficient for state persistence.
+        }
+
+        // Helper function to disable main scrolling (if needed)
+        function disableScrolling() {
+            document.body.style.overflow = "hidden";
+        }
+
+        // Helper function to re-enable main scrolling (if needed)
+         function enableScrolling() {
+            document.body.style.overflow = "auto";
+        }
+
+        // Function to clear the last game selection (useful if navigating away)
+        function clearGameSelection() {
+            // We likely DON'T want to clear these just by navigating away,
+            // as the user might click back. Session storage view marker is okay.
+            // localStorage.removeItem('lastClickedUrl');
+            // localStorage.removeItem('lastClickedGame');
+             sessionStorage.removeItem('lastViewedGameUrl'); // Clear session view marker
+        }
+
+        // Optional: Call clearGameSelection when navigating away
+        // window.addEventListener('beforeunload', clearGameSelection); // Use cautiously
+
+    </script>
+
+</body>
+</html>
