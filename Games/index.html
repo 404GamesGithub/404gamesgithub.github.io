@@ -25,7 +25,6 @@
 
     <!-- Global Scripts (Order matters: particles.js first, then settings) -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <!-- Assuming globalSettings.js contains the load/save/apply logic and sneak mode listeners -->
     <script src="../globalSettings.js"></script>
 
     <!-- AdSense (Keep) -->
@@ -686,29 +685,6 @@
                cursor: not-allowed;
            }
 
-         /* --- Sneak Mode Select Specific Styles --- */
-         #sneak-mode-select {
-            /* Override some general button/select styles if needed, or just inherit */
-            /* background-color, color, border inherited from above */
-            padding: 6px 10px; /* Adjust padding specifically for the select */
-            /* Add some default styles to remove browser defaults */
-            -webkit-appearance: none; /* Remove default browser styling in Webkit browsers */
-            -moz-appearance: none;    /* Remove default browser styling in Firefox */
-            appearance: none;         /* Remove default browser styling */
-            /* Add a custom arrow for appearance */
-            /* Using an inline SVG with light grey color (#eeeeee) */
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23eeeeee%22%20d%3D%22M287%2C114.7L159.3%2C242.5c-5.8%2C5.8-15.2%2C5.8-21%2C0L5.4%2C114.7c-5.8-5.8-5.8-15.2%2C0-21l19.8-19.8 c5.8-5.8%2C15.2-5.8%2C21%2C0l109.5%2C109.5l109.5-109.5c5.8-5.8%2C15.2-5.8%2C21%2C0l19.8%2C19.8C292.8%2C99.5%2C292.8%2C108.9%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 10px top 50%;
-            background-size: 12px auto;
-            padding-right: 30px; /* Make space for the custom arrow */
-         }
-
-         /* Style for options within the dropdown (less reliable cross-browser, may need system overrides) */
-         #sneak-mode-select option {
-           background-color: var(--background-color-dark, #2a2a2a); /* Dark background for options */
-           color: var(--text-color-light, #eeeeee); /* Light text for options */
-         }
 
          /* --- Custom Cursor Styles (Copied) --- */
          #custom-cursor {
@@ -891,9 +867,6 @@
 
     <!-- Unfocused Overlay - This will cover the page when window is unfocused -->
     <!-- Added here for sneak mode functionality -->
-     <div id="unfocused-overlay">
-         <!-- The background image is applied via CSS by the JS based on the setting -->
-     </div>
 
     <!-- Particles.js Background -->
     <!-- This style is in globalStyles.css now -->
@@ -960,21 +933,6 @@
                    <button id="open-blank-button" type="button" data-state="off">Open OFF</button> <!-- Default OFF -->
                </div>
            </div>
-           <div class="setting-item">
-             <div class="setting-label-wrapper">
-                 <label for="sneak-mode-select">Sneak Mode App:</label>
-             </div>
-             <div class="setting-control-wrapper">
-                 <select id="sneak-mode-select">
-                     <option value="off">Off (Default)</option>
-                     <option value="google">Google</option>
-                     <option value="docs">Google Docs</option>
-                     <option value="sheets">Google Sheets</option>
-                     <option value="drive">Google Drive</option>
-                     <option value="youtube">YouTube</option>
-                 </select>
-             </div>
-         </div>
        </div>
       <div class="settings-group">
         <h3>Customization</h3>
@@ -1844,7 +1802,6 @@
     let customCursor;
     let navLinks; // Needed for settings menu nav active state
     let body;
-    let unfocusedOverlay; // Added reference for sneak mode overlay
 
     // Settings menu elements
     let settingsPanel;
@@ -1859,7 +1816,6 @@
     let overlayColorButtonList;
     let cursorBorderColorButtonList;
     let cursorHoverColorButtonList;
-    let sneakModeSelect; // Added reference for sneak mode select
     let themeSelect; // Added reference for theme select
     let openBlankButton; // Added reference for Open in Blank button
     let enableCursorButton; // Added reference for Enable Cursor button
@@ -3082,7 +3038,6 @@
         overlayColorButtonList = overlayColorButtonList || document.querySelector('#settings .color-button-list[data-setting="overlay"]');
         cursorBorderColorButtonList = cursorBorderColorButtonList || document.querySelector('#settings .color-button-list[data-setting="cursor-border"]');
         cursorHoverColorButtonList = cursorHoverColorButtonList || document.querySelector('#settings .color-button-list[data-setting="cursor-hover"]');
-        sneakModeSelect = sneakModeSelect || document.getElementById('sneak-mode-select'); // Re-query
         themeSelect = themeSelect || document.getElementById('theme-select');
 
 
@@ -3156,26 +3111,6 @@
          themeSelect.disabled = true;
          themeSelect.title = "Currently only Dark theme is available.";
        } else { console.warn("updateSettingsUIFromLoadedSettings: Theme select element (#theme-select) not found."); }
-
-
-        // --- Sneak Mode Select ---
-        if (sneakModeSelect && currentSettings.hasOwnProperty('sneakModeApp')) {
-            let valueToSet = currentSettings.sneakModeApp;
-            // Check if the value from settings is a valid option in the select dropdown
-            const optionExists = Array.from(sneakModeSelect.options).some(option => option.value === valueToSet);
-
-            if (!optionExists) {
-                console.warn(`updateSettingsUIFromLoadedSettings: Loaded sneakModeApp value "${valueToSet}" does not match any option in the select. Defaulting select UI to "off".`);
-                valueToSet = 'off'; // Default the UI select element value
-            }
-            sneakModeSelect.value = valueToSet; // Set the selected option in the UI
-             // console.log(`updateSettingsUIFromLoadedSettings: Set #sneak-mode-select value to "${sneakModeSelect.value}"`);
-
-            // The actual sneak mode listener/overlay state is managed by applySettings in globalSettings.js
-            // which calls enable/disableSneakMode.
-        } else if (sneakModeSelect) {
-             console.warn("updateSettingsUIFromLoadedSettings: 'sneakModeApp' setting not found in currentSettings. Cannot update sneak mode select UI.");
-        } else { console.warn("updateSettingsUIFromLoadedSettings: Sneak mode select element (#sneak-mode-select) not found."); }
 
 
        // Update Color Button selections
@@ -3566,7 +3501,6 @@
       overlayColorButtonList = document.querySelector('#settings .color-button-list[data-setting="overlay"]');
       cursorBorderColorButtonList = document.querySelector('#settings .color-button-list[data-setting="cursor-border"]');
       cursorHoverColorButtonList = document.querySelector('#settings .color-button-list[data-setting="cursor-hover"]');
-      sneakModeSelect = document.getElementById('sneak-mode-select');
 
 
      // 4. Attach Listeners for Settings Buttons (Toggles)
@@ -3583,8 +3517,6 @@
      setupColorButtonList(cursorBorderColorButtonList, 'cursorColor');
      setupColorButtonList(cursorHoverColorButtonList, 'cursorHoverColor');
 
-     // 6. Attach Listener for the Sneak Mode Select
-     setupSelectListener(sneakModeSelect, 'sneakModeApp');
 
      // 7. Attach Listener for Reset Button
      if (resetSettingsBtn && typeof window.clearSettings === 'function') {
@@ -3753,48 +3685,7 @@
 
            const currentSettings = event.detail.settings;
            const bodyClassList = body?.classList;
-
-            // Check if sneak mode is being turned OFF (body.unfocused class removed)
-            // and if the search input has text.
-            // We need to do this here specifically when sneak mode disables.
-            if (bodyClassList && !bodyClassList.contains('unfocused')) {
-                 // Sneak mode is now OFF or was already off
-                 // Check if searchInput exists and has value
-                 if (searchInput && searchInput.value.trim() !== '') {
-                     console.log("Sneak mode turned OFF and search input has text. Clearing search and re-filtering.");
-                     searchInput.value = ''; // Clear the search input
-                     filterGames(); // Re-run filter with empty value
-                 } else {
-                     console.log("Sneak mode turned OFF. Search input is empty or not found. Re-running filter.");
-                      // Even if the search is empty, re-running the filter ensures visibility is correct
-                     // if some items were hidden *before* sneak mode was activated.
-                     filterGames(); // Re-run filter (handles showing/hiding based on animations + search)
-                 }
-             } else {
-                 // Sneak mode is ON. The main content is hidden by CSS.
-                 // We still update UI settings, but filtering shouldn't make content visible.
-                 console.log("Sneak mode is ON. Re-running filter to update hidden/shown states internally.");
-                 filterGames(); // Re-run filter to update internal hidden states, but CSS keeps main hidden.
-             }
-
-
-            // Re-apply page state affected by settings that are *not* handled by sneak mode CSS:
-            requestAnimationFrame(() => {
-                 // The updateFavoritesSectionVisibility function also triggers its own arrow update
-                 const favSection = document.getElementById('favoritesSection');
-                 if (favSection && typeof favSection._updateSectionVisibility === 'function') {
-                      favSection._updateSectionVisibility();
-                 }
-            });
-
-            // Ensure interactive cursor listeners are updated as elements might have changed state/appearance
-            addInteractiveCursorListeners();
-
-             // Sneak mode handling is done within globalSettings.js applySettings
-             // which calls enable/disableSneakMode, which adds/removes global window/document listeners.
-             // The hide/show logic for main content is handled by CSS based on the body.unfocused class.
-             // The *initial* sneak mode state on load is handled by the applySettings call triggered by globalSettings.js DOMContentLoaded.
-         };
+         }
          if (body) {
               body.addEventListener('globalSettingsApplied', settingsAppliedListener);
               body._settingsAppliedListener = settingsAppliedListener; // Store listener
